@@ -4,6 +4,7 @@ Library.__index = Library
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
 
 function Library:Window(Titlee, Version, Infoo, Accentt)
 
@@ -102,6 +103,11 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 		local UIListLayout = Instance.new("UIListLayout")
 		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout.Parent = Scrolling
+
+		-- Auto-update canvas size for navigation
+		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			Scrolling.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+		end)
 
 		local BottomBar = Instance.new("Frame")
 		BottomBar.AnchorPoint = Vector2.new(0, 1)
@@ -318,6 +324,11 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 			UIPadding.PaddingLeft = UDim.new(0, 5)
 			UIPadding.Parent = Scrolling
 
+			-- Auto-update canvas size for tab content
+			UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				Scrolling.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+			end)
+
 			local TabData = {
 				Name = Titleee,
 				NavButton = Tab,
@@ -454,11 +465,28 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					return element
 				end
 				
+				-- Helper function to calculate text height with wrapping
+				local function GetWrappedTextHeight(text, textSize, font, maxWidth)
+					local textBounds = TextService:GetTextSize(text, textSize, font, Vector2.new(maxWidth, math.huge))
+					return textBounds.Y
+				end
+				
 				function Sectionn:Button(Titlew, Infooo, Callbackw)
+					-- Calculate required heights for text wrapping
+					local titleWidth = 150  -- Approximate width for title
+					local infoWidth = 150   -- Approximate width for info
+					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+					
+					local titleHeight = GetWrappedTextHeight(Titlew or "", 14, font, titleWidth)
+					local infoHeight = GetWrappedTextHeight(Infooo or "", 14, font, infoWidth)
+					
+					-- Calculate total height needed (minimum 30, but expand if text is taller)
+					local totalHeight = math.max(30, titleHeight + infoHeight + 10)
+					
 					local Button = Instance.new("Frame")
 					Button.Name = "Button"
 					Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Button.Size = UDim2.new(1, 0, 0, 30)
+					Button.Size = UDim2.new(1, 0, 0, totalHeight)
 					Button.BorderSizePixel = 0
 					Button.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
 					Button.Parent = Scrolling
@@ -473,12 +501,14 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Title.Text = Titlew
 					Title.Name = "Title"
-					Title.Size = UDim2.new(0.699999988079071, -5, 0.5, 0)
+					Title.Size = UDim2.new(0.699999988079071, -5, 0, titleHeight)
 					Title.BackgroundTransparency = 1
 					Title.TextXAlignment = Enum.TextXAlignment.Left
+					Title.TextYAlignment = Enum.TextYAlignment.Top
 					Title.Position = UDim2.new(0, 5, 0, 2)
 					Title.BorderSizePixel = 0
 					Title.TextSize = 14
+					Title.TextWrapped = true
 					Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					Title.Parent = Button
 
@@ -488,13 +518,14 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Info.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Info.Text = Infooo
 					Info.Name = "Info"
-					Info.AnchorPoint = Vector2.new(0, 1)
-					Info.Size = UDim2.new(0.699999988079071, -5, 0.5, 0)
+					Info.Size = UDim2.new(0.699999988079071, -5, 0, infoHeight)
 					Info.BackgroundTransparency = 1
 					Info.TextXAlignment = Enum.TextXAlignment.Left
-					Info.Position = UDim2.new(0, 5, 1, -2)
+					Info.TextYAlignment = Enum.TextYAlignment.Top
+					Info.Position = UDim2.new(0, 5, 0, titleHeight + 2)
 					Info.BorderSizePixel = 0
 					Info.TextSize = 14
+					Info.TextWrapped = true
 					Info.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					Info.Parent = Button
 					
@@ -508,10 +539,18 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 				end
 				
 				function Sectionn:Label(Textw)
+					-- Calculate required height for text wrapping
+					local textWidth = 220  -- Approximate width for label
+					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+					local textHeight = GetWrappedTextHeight(Textw or "", 14, font, textWidth)
+					
+					-- Minimum height of 25, but expand if text is taller
+					local totalHeight = math.max(25, textHeight + 10)
+					
 					local Label = Instance.new("Frame")
 					Label.Name = "Label"
 					Label.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Label.Size = UDim2.new(1, 0, 0, 25)
+					Label.Size = UDim2.new(1, 0, 0, totalHeight)
 					Label.BorderSizePixel = 0
 					Label.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
 					Label.Parent = Scrolling
@@ -526,12 +565,14 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Text.Text = Textw
 					Text.Name = "Label"
-					Text.Size = UDim2.new(1, -5, 1, 0)
+					Text.Size = UDim2.new(1, -10, 1, -10)
 					Text.BackgroundTransparency = 1
 					Text.TextXAlignment = Enum.TextXAlignment.Left
-					Text.Position = UDim2.new(0, 5, 0, 0)
+					Text.TextYAlignment = Enum.TextYAlignment.Top
+					Text.Position = UDim2.new(0, 5, 0, 5)
 					Text.BorderSizePixel = 0
 					Text.TextSize = 14
+					Text.TextWrapped = true
 					Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					Text.Parent = Label
 					
@@ -545,10 +586,21 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 
 					local keybindConnection
 
+					-- Calculate required heights for text wrapping
+					local titleWidth = 120  -- Approximate width for title (reduced due to toggle elements)
+					local infoWidth = 120   -- Approximate width for info
+					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+					
+					local titleHeight = GetWrappedTextHeight(Titlex or "", 14, font, titleWidth)
+					local infoHeight = GetWrappedTextHeight(Infox or "", 14, font, infoWidth)
+					
+					-- Calculate total height needed (minimum 30, but expand if text is taller)
+					local totalHeight = math.max(30, titleHeight + infoHeight + 10)
+
 					local Toggle = Instance.new("Frame")
 					Toggle.Name = "Toggle"
 					Toggle.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Toggle.Size = UDim2.new(1, 0, 0, 30)
+					Toggle.Size = UDim2.new(1, 0, 0, totalHeight)
 					Toggle.BorderSizePixel = 0
 					Toggle.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
 					Toggle.Parent = Scrolling
@@ -563,12 +615,14 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Title.Text = Titlex
 					Title.Name = "Title"
-					Title.Size = UDim2.new(0.699999988079071, -5, 0.5, 0)
+					Title.Size = UDim2.new(0.5, -5, 0, titleHeight)
 					Title.BackgroundTransparency = 1
 					Title.TextXAlignment = Enum.TextXAlignment.Left
+					Title.TextYAlignment = Enum.TextYAlignment.Top
 					Title.Position = UDim2.new(0, 5, 0, 2)
 					Title.BorderSizePixel = 0
 					Title.TextSize = 14
+					Title.TextWrapped = true
 					Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					Title.Parent = Toggle
 
@@ -578,13 +632,14 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Info.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Info.Text = Infox
 					Info.Name = "Info"
-					Info.AnchorPoint = Vector2.new(0, 1)
-					Info.Size = UDim2.new(0.699999988079071, -5, 0.5, 0)
+					Info.Size = UDim2.new(0.5, -5, 0, infoHeight)
 					Info.BackgroundTransparency = 1
 					Info.TextXAlignment = Enum.TextXAlignment.Left
-					Info.Position = UDim2.new(0, 5, 1, -2)
+					Info.TextYAlignment = Enum.TextYAlignment.Top
+					Info.Position = UDim2.new(0, 5, 0, titleHeight + 2)
 					Info.BorderSizePixel = 0
 					Info.TextSize = 14
+					Info.TextWrapped = true
 					Info.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					Info.Parent = Toggle
 
@@ -747,10 +802,18 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 						Value = Defaultz or Min or 0
 					}
 
+					-- Calculate height for title text wrapping
+					local titleWidth = 80  -- Reduced width due to value label on right
+					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+					local titleHeight = GetWrappedTextHeight(Titlev or "Slider", 14, font, titleWidth)
+					
+					-- Minimum height of 40 to accommodate slider bar, but expand if title is taller
+					local totalHeight = math.max(40, titleHeight + 25)
+
 					local Slider = Instance.new("Frame")
 					Slider.Name = "Slider"
 					Slider.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Slider.Size = UDim2.new(1, 0, 0, 40)
+					Slider.Size = UDim2.new(1, 0, 0, totalHeight)
 					Slider.BorderSizePixel = 0
 					Slider.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
 					Slider.Parent = Scrolling
@@ -765,12 +828,14 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Title.Text = Titlev or "Slider"
 					Title.Name = "Title"
-					Title.Size = UDim2.new(0.30000001192092896, -5, 0, 20)
+					Title.Size = UDim2.new(0.5, -5, 0, titleHeight)
 					Title.BackgroundTransparency = 1
 					Title.TextXAlignment = Enum.TextXAlignment.Left
+					Title.TextYAlignment = Enum.TextYAlignment.Top
 					Title.Position = UDim2.new(0, 5, 0, 2)
 					Title.BorderSizePixel = 0
 					Title.TextSize = 14
+					Title.TextWrapped = true
 					Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					Title.Parent = Slider
 
@@ -792,7 +857,7 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 
 					local Bar = Instance.new("Frame")
 					Bar.Name = "Bar"
-					Bar.Position = UDim2.new(0, 5, 0, 25)
+					Bar.Position = UDim2.new(0, 5, 1, -15)
 					Bar.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Bar.Size = UDim2.new(1, -10, 0, 10)
 					Bar.BorderSizePixel = 0
