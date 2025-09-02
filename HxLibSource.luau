@@ -524,7 +524,8 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Text.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 					Text.TextColor3 = Color3.fromRGB(99, 99, 99)
 					Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Text.Name = Textw
+					Text.Text = Textw
+					Text.Name = "Label"
 					Text.Size = UDim2.new(1, -5, 1, 0)
 					Text.BackgroundTransparency = 1
 					Text.TextXAlignment = Enum.TextXAlignment.Left
