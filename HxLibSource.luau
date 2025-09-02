@@ -471,18 +471,7 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					return textBounds.Y
 				end
 				
-				function Sectionn:Button(Titlew, Infooo, Callbackw)
-					-- Calculate required heights for text wrapping
-					local titleWidth = 150  -- Approximate width for title
-					local infoWidth = 150   -- Approximate width for info
-					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-					
-					local titleHeight = GetWrappedTextHeight(Titlew or "", 14, font, titleWidth)
-					local infoHeight = GetWrappedTextHeight(Infooo or "", 14, font, infoWidth)
-					
-					-- Calculate total height needed (minimum 30, but expand if text is taller)
-					local totalHeight = math.max(30, titleHeight + infoHeight + 10)
-					
+				function Sectionn:Button(Titlew, Infooo, Callbackw)		
 					local Button = Instance.new("Frame")
 					Button.Name = "Button"
 					Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -534,6 +523,16 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					ButtonDetector.Parent = Button
 					ButtonDetector.Size = UDim2.new(1,0,1,0)
 					ButtonDetector.MouseButton1Click:Connect(Callbackw)
+
+					-- Calculate required heights for text wrapping
+					local titleWidth = 150  -- Approximate width for title
+					local infoWidth = 150   -- Approximate width for info
+					
+					local titleHeight = GetWrappedTextHeight(Titlew or "", 14, Title.Font, titleWidth)
+					local infoHeight = GetWrappedTextHeight(Infooo or "", 14, Info.Font, infoWidth)
+					
+					-- Calculate total height needed (minimum 30, but expand if text is taller)
+					local totalHeight = math.max(30, titleHeight + infoHeight + 10)
 					
 					return Sectionn:AddElement(Button)
 				end
