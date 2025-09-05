@@ -6,6 +6,14 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
 local TextService = game:GetService("TextService")
 
+local function GetWrappedTextHeight(text, textSize, fontName, maxWidth)
+	local success, result = pcall(function()
+		local font = Font.new(fontName, Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+		return TextService:GetTextSize(text or "", textSize or 14, font, Vector2.new(maxWidth, math.huge)).Y
+	end)
+	return success and result or (textSize or 14)
+end
+
 function Library:Window(Titlee, Version, Infoo, Accentt)
 
 	local Window = {}
