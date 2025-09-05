@@ -100,14 +100,20 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 		Scrolling.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		Scrolling.Parent = Navigation
 
-		local UIListLayout = Instance.new("UIListLayout")
-		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		UIListLayout.Parent = Scrolling
-
-		-- Auto-update canvas size for navigation
-		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			Scrolling.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
-		end)
+		-- Manual positioning system for navigation tabs
+		local NavLayoutManager = {
+			Elements = {},
+			CurrentY = 0,
+			Padding = 3
+		}
+		
+		function NavLayoutManager:AddElement(element)
+			table.insert(self.Elements, element)
+			element.Position = UDim2.new(0, 0, 0, self.CurrentY)
+			self.CurrentY = self.CurrentY + element.Size.Y.Offset + self.Padding
+			Scrolling.CanvasSize = UDim2.new(0, 0, 0, self.CurrentY)
+			return element
+		end
 
 		local BottomBar = Instance.new("Frame")
 		BottomBar.AnchorPoint = Vector2.new(0, 1)
@@ -311,12 +317,33 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 			Scrolling.BorderSizePixel = 0
 			Scrolling.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			Scrolling.Parent = TabContent
-			Scrolling.CanvasSize = Udim2.new(0,0,3,0)
+			Scrolling.CanvasSize = UDim2.new(0,0,3,0)
 
-			local UIListLayout = Instance.new("UIListLayout")
-			UIListLayout.Padding = UDim.new(0, 3)
-			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			UIListLayout.Parent = Scrolling
+			-- Manual positioning system for tab content
+			local TabLayoutManager = {
+				Elements = {},
+				CurrentY = 12,
+				Padding = 3
+			}
+			
+			function TabLayoutManager:AddElement(element)
+				table.insert(self.Elements, element)
+				element.Position = UDim2.new(0, 5, 0, self.CurrentY)
+				self.CurrentY = self.CurrentY + element.Size.Y.Offset + self.Padding
+				Scrolling.CanvasSize = UDim2.new(0, 0, 0, self.CurrentY + 5)
+				return element
+			end
+			
+			function TabLayoutManager:UpdateLayout()
+				self.CurrentY = 12
+				for _, element in ipairs(self.Elements) do
+					if element and element.Parent then
+						element.Position = UDim2.new(0, 5, 0, self.CurrentY)
+						self.CurrentY = self.CurrentY + element.Size.Y.Offset + self.Padding
+					end
+				end
+				Scrolling.CanvasSize = UDim2.new(0, 0, 0, self.CurrentY + 5)
+			end
 
 			local UIPadding = Instance.new("UIPadding")
 			UIPadding.PaddingTop = UDim.new(0, 12)
@@ -325,12 +352,16 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 			UIPadding.PaddingLeft = UDim.new(0, 5)
 			UIPadding.Parent = Scrolling
 
+			-- Add tab to navigation using manual positioning
+			NavLayoutManager:AddElement(Tab)
+
 			local TabData = {
 				Name = Titleee,
 				NavButton = Tab,
 				ContentFrame = TabContent,
 				ScrollingFrame = Scrolling,
-				Accent = Accent
+				Accent = Accent,
+				LayoutManager = TabLayoutManager
 			}
 
 			table.insert(Window.Tabs, TabData)
@@ -344,6 +375,7 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 			end
 
 			Tabb.ScrollingFrame = Scrolling
+			Tabb.LayoutManager = TabLayoutManager
 
 			function Tabb:Section(Titleeee)
 				local Sectionn = {}
@@ -352,7 +384,7 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 				local Section = Instance.new("Frame")
 				Section.Name = "Section"
 				Section.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Section.Size = UDim2.new(1, 0, 0, 25)
+				Section.Size = UDim2.new(1, -10, 0, 25)
 				Section.BorderSizePixel = 0
 				Section.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 				Section.Parent = Scrolling
@@ -399,44 +431,33 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 				ContentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 				ContentFrame.Parent = Section
 
-				local ContentScrolling = Instance.new("ScrollingFrame")
-				ContentScrolling.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
-				ContentScrolling.Active = true
-				ContentScrolling.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				ContentScrolling.ScrollBarThickness = 0
-				ContentScrolling.BackgroundTransparency = 1
-				ContentScrolling.Name = "ContentScrolling"
-				ContentScrolling.Size = UDim2.new(1, 0, 1, 0)
-				ContentScrolling.BorderSizePixel = 0
-				ContentScrolling.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				ContentScrolling.Parent = ContentFrame
-
-				local ContentListLayout = Instance.new("UIListLayout")
-				ContentListLayout.Padding = UDim.new(0, 3)
-				ContentListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-				ContentListLayout.Parent = ContentScrolling
-
-				local ContentPadding = Instance.new("UIPadding")
-				ContentPadding.PaddingTop = UDim.new(0, 5)
-				ContentPadding.PaddingBottom = UDim.new(0, 5)
-				ContentPadding.PaddingRight = UDim.new(0, 5)
-				ContentPadding.PaddingLeft = UDim.new(0, 5)
-				ContentPadding.Parent = ContentScrolling
-
-				local function UpdateSectionSize()
-					local totalHeight = 25
-					local contentHeight = ContentListLayout.AbsoluteContentSize.Y + ContentPadding.PaddingTop.Offset + ContentPadding.PaddingBottom.Offset
-					totalHeight = totalHeight + contentHeight
-
+				-- Manual positioning system for section content
+				local SectionLayoutManager = {
+					Elements = {},
+					CurrentY = 5,
+					Padding = 3
+				}
+				
+				function SectionLayoutManager:AddElement(element)
+					table.insert(self.Elements, element)
+					element.Position = UDim2.new(0, 5, 0, self.CurrentY)
+					self.CurrentY = self.CurrentY + element.Size.Y.Offset + self.Padding
+					return element
+				end
+				
+				function SectionLayoutManager:UpdateSectionSize()
+					local totalHeight = 25 + self.CurrentY + 5
 					if totalHeight < 50 then
 						totalHeight = 50
 					end
-
-					Section.Size = UDim2.new(1, 0, 0, totalHeight)
-					ContentScrolling.CanvasSize = UDim2.new(0, 0, 0, ContentListLayout.AbsoluteContentSize.Y)
+					Section.Size = UDim2.new(1, -10, 0, totalHeight)
+					-- Update the tab layout when section size changes
+					TabLayoutManager:UpdateLayout()
 				end
 
-				ContentListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSectionSize)
+				local function UpdateSectionSize()
+					SectionLayoutManager:UpdateSectionSize()
+				end
 
 				UpdateSectionSize()
 
@@ -450,22 +471,21 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 						Arrow.Rotation = 0
 					else
 						ContentFrame.Visible = false
-						Section.Size = UDim2.new(1, 0, 0, 25)
+						Section.Size = UDim2.new(1, -10, 0, 25)
 						Arrow.Rotation = -90
+						TabLayoutManager:UpdateLayout()
 					end
 				end)
 
 				function Sectionn:AddElement(element)
-					element.Parent = ContentScrolling
+					element.Parent = ContentFrame
+					SectionLayoutManager:AddElement(element)
 					UpdateSectionSize()
 					return element
 				end
 				
-				-- Helper function to calculate text height with wrapping
-				local function GetWrappedTextHeight(text, textSize, font, maxWidth)
-					local textBounds = TextService:GetTextSize(text, textSize, font, Vector2.new(maxWidth, math.huge))
-					return textBounds.Y
-				end
+				-- Add section to tab using manual positioning
+				TabLayoutManager:AddElement(Section)
 				
 				function Sectionn:Button(Titlew, Infooo, Callbackw)
 					-- Calculate required heights for text wrapping
@@ -481,10 +501,9 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					local Button = Instance.new("Frame")
 					Button.Name = "Button"
 					Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Button.Size = UDim2.new(1, 0, 0, totalHeight)
+					Button.Size = UDim2.new(1, -10, 0, totalHeight)
 					Button.BorderSizePixel = 0
 					Button.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-					Button.Parent = Scrolling
 
 					local UIStroke = Instance.new("UIStroke")
 					UIStroke.Color = Color3.fromRGB(47, 47, 47)
@@ -525,9 +544,10 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					Info.Parent = Button
 					
 					local ButtonDetector = Instance.new("TextButton")
-					ButtonDetector.Transparency = 1
+					ButtonDetector.BackgroundTransparency = 1
 					ButtonDetector.Parent = Button
 					ButtonDetector.Size = UDim2.new(1,0,1,0)
+					ButtonDetector.Text = ""
 					ButtonDetector.MouseButton1Click:Connect(Callbackw)
 					
 					return Sectionn:AddElement(Button)
@@ -536,54 +556,6 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 				function Sectionn:Label(Textw)
 					-- Calculate required height for text wrapping
 					local textWidth = 220  -- Approximate width for label
-					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-					local textHeight = GetWrappedTextHeight(Textw or "", 14, font, textWidth)
-					
-					-- Minimum height of 25, but expand if text is taller
-					local totalHeight = math.max(25, textHeight + 10)
-					
-					local Label = Instance.new("Frame")
-					Label.Name = "Label"
-					Label.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Label.Size = UDim2.new(1, 0, 0, totalHeight)
-					Label.BorderSizePixel = 0
-					Label.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-					Label.Parent = Scrolling
-
-					local UIStroke = Instance.new("UIStroke")
-					UIStroke.Color = Color3.fromRGB(47, 47, 47)
-					UIStroke.Parent = Label
-
-					local Text = Instance.new("TextLabel")
-					Text.FontFace = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-					Text.TextColor3 = Color3.fromRGB(99, 99, 99)
-					Text.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Text.Text = Textw
-					Text.Name = "Label"
-					Text.Size = UDim2.new(1, -10, 1, -10)
-					Text.BackgroundTransparency = 1
-					Text.TextXAlignment = Enum.TextXAlignment.Left
-					Text.TextYAlignment = Enum.TextYAlignment.Top
-					Text.Position = UDim2.new(0, 5, 0, 5)
-					Text.BorderSizePixel = 0
-					Text.TextSize = 14
-					Text.TextWrapped = true
-					Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					Text.Parent = Label
-					
-					return Sectionn:AddElement(Label)
-				end
-				
-				function Sectionn:Toggle(Titlex, Infox, Default, Keybind, Callback)
-					local ToggleData = {
-						Active = Default,
-					}
-
-					local keybindConnection
-
-					-- Calculate required heights for text wrapping
-					local titleWidth = 120  -- Approximate width for title (reduced due to toggle elements)
-					local infoWidth = 120   -- Approximate width for info
 					local font = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 					
 					local titleHeight = GetWrappedTextHeight(Titlex or "", 14, font, titleWidth)
@@ -595,10 +567,9 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					local Toggle = Instance.new("Frame")
 					Toggle.Name = "Toggle"
 					Toggle.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Toggle.Size = UDim2.new(1, 0, 0, totalHeight)
+					Toggle.Size = UDim2.new(1, -10, 0, totalHeight)
 					Toggle.BorderSizePixel = 0
 					Toggle.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-					Toggle.Parent = Scrolling
 
 					local UIStroke = Instance.new("UIStroke")
 					UIStroke.Color = Color3.fromRGB(47, 47, 47)
@@ -808,10 +779,9 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					local Slider = Instance.new("Frame")
 					Slider.Name = "Slider"
 					Slider.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Slider.Size = UDim2.new(1, 0, 0, totalHeight)
+					Slider.Size = UDim2.new(1, -10, 0, totalHeight)
 					Slider.BorderSizePixel = 0
 					Slider.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
-					Slider.Parent = Scrolling
 
 					local UIStroke = Instance.new("UIStroke")
 					UIStroke.Color = Color3.fromRGB(47, 47, 47)
