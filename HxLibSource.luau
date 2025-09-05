@@ -500,8 +500,8 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 					local titleWidth = 150  -- Approximate width for title
 					local infoWidth = 150   -- Approximate width for info
 					
-					local titleHeight = GetWrappedTextHeight(Titlew or "", 14, Title.Font, titleWidth)
-					local infoHeight = GetWrappedTextHeight(Infooo or "", 14, Info.Font, infoWidth)
+					local titleHeight = GetWrappedTextHeight(Titlew or "", 14, "rbxasset://fonts/families/Inconsolata.json", titleWidth)
+					local infoHeight = GetWrappedTextHeight(Infooo or "", 14, "rbxasset://fonts/families/Inconsolata.json", infoWidth)
 					
 					-- Calculate total height needed (minimum 30, but expand if text is taller)
 					local totalHeight = math.max(30, titleHeight + infoHeight + 10)
