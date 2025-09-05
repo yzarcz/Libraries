@@ -14,7 +14,7 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 	Window.CurrentTab = nil
 
 	for _, gui in pairs(PlayerGui:GetChildren()) do
-		if gui.Name == "baconlib" then
+		if gui.Name == "HxLib" then
 			gui:Destroy()
 		end
 	end
