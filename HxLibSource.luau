@@ -325,11 +325,6 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 			UIPadding.PaddingLeft = UDim.new(0, 5)
 			UIPadding.Parent = Scrolling
 
-			-- Auto-update canvas size for tab content
-			UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-				Scrolling.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
-			end)
-
 			local TabData = {
 				Name = Titleee,
 				NavButton = Tab,
