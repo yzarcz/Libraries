@@ -311,6 +311,7 @@ function Library:Window(Titlee, Version, Infoo, Accentt)
 			Scrolling.BorderSizePixel = 0
 			Scrolling.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			Scrolling.Parent = TabContent
+			Scrolling.CanvasSize = Udim2.new(0,0,3,0)
 
 			local UIListLayout = Instance.new("UIListLayout")
 			UIListLayout.Padding = UDim.new(0, 3)
